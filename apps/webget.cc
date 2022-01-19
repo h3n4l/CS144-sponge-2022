@@ -1,5 +1,13 @@
-#include "socket.hh"
-#include "util.hh"
+/*
+ * @Author: your name
+ * @Date: 2022-01-19 15:25:25
+ * @LastEditTime: 2022-01-19 15:27:17
+ * @LastEditors: your name
+ * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ * @FilePath: /CS144-sponge-2022/apps/webget.cc
+ */
+#include "../libsponge/util/socket.hh"
+#include "../libsponge/util/util.hh"
 
 #include <cstdlib>
 #include <iostream>
@@ -19,6 +27,15 @@ void get_URL(const string &host, const string &path) {
 
     cerr << "Function called: get_URL(" << host << ", " << path << ").\n";
     cerr << "Warning: get_URL() has not been implemented yet.\n";
+    Address target_addr(host, "http");
+    TCPSocket tcp_sock;
+    tcp_sock.connect(target_addr);
+    const string get_req = "GET " + path + " HTTP/1.1\r\n" + "Host: " + host + "\r\n" + "Connection: close\r\n\r\n";
+    tcp_sock.write(get_req);
+    for (; !tcp_sock.eof();)
+        std::cout << tcp_sock.read();
+    tcp_sock.close();
+    return;
 }
 
 int main(int argc, char *argv[]) {

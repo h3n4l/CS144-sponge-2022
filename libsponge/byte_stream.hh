@@ -1,3 +1,10 @@
+/*
+ * @Author: h3n4l
+ * @Date: 2022-01-15 12:52:05
+ * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2022-01-19 15:28:09
+ * @FilePath: /sponge/libsponge/byte_stream.hh
+ */
 #ifndef SPONGE_LIBSPONGE_BYTE_STREAM_HH
 #define SPONGE_LIBSPONGE_BYTE_STREAM_HH
 
@@ -11,7 +18,11 @@
 class ByteStream {
   private:
     // Your code here -- add private members as necessary.
-
+    size_t cap;          // Capacity of this ByteStrem.
+    size_t total_write;  // Total numbers of bytes written.
+    size_t total_read;   // Total numbers of bytes read.
+    std::string buffer;  // Save the content.
+    bool _end;           // End signal.
     // Hint: This doesn't need to be a sophisticated data structure at
     // all, but if any of your tests are taking longer than a second,
     // that's a sign that you probably want to keep exploring
