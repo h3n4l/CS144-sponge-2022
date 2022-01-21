@@ -1,35 +1,56 @@
+/*
+ * @Author: h3n4l
+ * @Date: 2022-01-19 15:35:17
+ * @LastEditors: h3n4l
+ * @LastEditTime: 2022-01-20 22:36:09
+ * @FilePath: /CS144-sponge-2022/libsponge/stream_reassembler.hh
+ */
 #ifndef SPONGE_LIBSPONGE_STREAM_REASSEMBLER_HH
 #define SPONGE_LIBSPONGE_STREAM_REASSEMBLER_HH
 
 #include "byte_stream.hh"
 
 #include <cstdint>
-#include <string>
+#include <list>
 
-//! \brief A class that assembles a series of excerpts from a byte stream (possibly out of order,
-//! possibly overlapping) into an in-order byte stream.
+//! \brief A class that assembles a series of excerpts from a byte stream
+//! (possibly out of order, possibly overlapping) into an in-order byte stream.
 class StreamReassembler {
-  private:
+   private:
     // Your code here -- add private members as necessary.
-
+    typedef struct node {
+        std::string _data;
+        uint64_t _index;
+        uint64_t _end_index;
+        node(std::string data, uint64_t index)
+            : _data(data), _index(index), _end_index(index + data.size()) {}
+    } node;
+    std::list<node> _pad{};
     ByteStream _output;  //!< The reassembled in-order byte stream
     size_t _capacity;    //!< The maximum number of bytes
+    size_t _unasm_bytes;
+    uint64_t _eof_idx;
+    uint64_t _expect_index;
+    bool _set_eof;
 
-  public:
-    //! \brief Construct a `StreamReassembler` that will store up to `capacity` bytes.
-    //! \note This capacity limits both the bytes that have been reassembled,
-    //! and those that have not yet been reassembled.
+   public:
+    //! \brief Construct a `StreamReassembler` that will store up to `capacity`
+    //! bytes. \note This capacity limits both the bytes that have been
+    //! reassembled, and those that have not yet been reassembled.
     StreamReassembler(const size_t capacity);
 
-    //! \brief Receive a substring and write any newly contiguous bytes into the stream.
+    //! \brief Receive a substring and write any newly contiguous bytes into the
+    //! stream.
     //!
-    //! The StreamReassembler will stay within the memory limits of the `capacity`.
-    //! Bytes that would exceed the capacity are silently discarded.
+    //! The StreamReassembler will stay within the memory limits of the
+    //! `capacity`. Bytes that would exceed the capacity are silently discarded.
     //!
     //! \param data the substring
-    //! \param index indicates the index (place in sequence) of the first byte in `data`
-    //! \param eof the last byte of `data` will be the last byte in the entire stream
-    void push_substring(const std::string &data, const uint64_t index, const bool eof);
+    //! \param index indicates the index (place in sequence) of the first byte
+    //! in `data` \param eof the last byte of `data` will be the last byte in
+    //! the entire stream
+    void push_substring(const std::string &data, const uint64_t index,
+                        const bool eof);
 
     //! \name Access the reassembled byte stream
     //!@{
@@ -39,8 +60,8 @@ class StreamReassembler {
 
     //! The number of bytes in the substrings stored but not yet reassembled
     //!
-    //! \note If the byte at a particular index has been pushed more than once, it
-    //! should only be counted once for the purpose of this function.
+    //! \note If the byte at a particular index has been pushed more than once,
+    //! it should only be counted once for the purpose of this function.
     size_t unassembled_bytes() const;
 
     //! \brief Is the internal state empty (other than the output stream)?
