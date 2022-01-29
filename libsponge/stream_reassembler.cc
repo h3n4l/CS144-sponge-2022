@@ -2,7 +2,7 @@
  * @Author: h3n4l
  * @Date: 2022-01-19 15:35:17
  * @LastEditors: h3n4l
- * @LastEditTime: 2022-01-21 19:45:10
+ * @LastEditTime: 2022-01-28 20:25:27
  * @FilePath: /CS144-sponge-2022/libsponge/stream_reassembler.cc
  */
 #include "stream_reassembler.hh"
@@ -28,8 +28,6 @@ StreamReassembler::StreamReassembler(const size_t capacity)
 //! possibly out-of-order, from the logical stream, and assembles any newly
 //! contiguous substrings and writes them into the output stream in order.
 void StreamReassembler::push_substring(const string &data, const size_t index, const bool eof) {
-    cout << "Receive index:" << index << "\tdatasize:" << data.size() << "\tendidx:" << index + data.size()
-         << "\teof:" << eof << endl;
     DUMMY_CODE(data, index, eof);
     node nd(data, index);
     if (_set_eof && nd._end_index > _eof_idx) {
