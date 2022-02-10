@@ -1,3 +1,10 @@
+/*
+ * @Author: h3n4l
+ * @Date: 2022-02-05 08:13:39
+ * @LastEditors: h3n4l
+ * @LastEditTime: 2022-02-09 11:49:57
+ * @FilePath: /CS144-sponge-2022/libsponge/tcp_sender.hh
+ */
 #ifndef SPONGE_LIBSPONGE_TCP_SENDER_HH
 #define SPONGE_LIBSPONGE_TCP_SENDER_HH
 
@@ -9,6 +16,31 @@
 #include <functional>
 #include <queue>
 
+class Timer {
+   public:
+    Timer(size_t _init_rto);
+    bool tick(const size_t ms_since_last_tick, bool need_double_rto);
+    void active() { _active = true; }
+    void banned() { _active = false; }
+    void reset(size_t rto) {
+        _rto = rto;
+        _ms = 0;
+        _consecutive_retransmissions = 0;
+    }
+    unsigned int get_consecutive_retransmissions() const {
+        return _consecutive_retransmissions;
+    }
+
+   private:
+    bool is_active() const { return _active; }
+    void double_rto();
+
+    size_t _rto;
+    size_t _ms{0};
+    bool _active{false};
+    unsigned int _consecutive_retransmissions{0};
+};
+
 //! \brief The "sender" part of a TCP implementation.
 
 //! Accepts a ByteStream, divides it up into segments and sends the
@@ -16,7 +48,7 @@
 //! maintains the Retransmission Timer, and retransmits in-flight
 //! segments if the retransmission timer expires.
 class TCPSender {
-  private:
+   private:
     //! our initial sequence number, the number for our SYN.
     WrappingInt32 _isn;
 
@@ -32,7 +64,25 @@ class TCPSender {
     //! the (absolute) sequence number for the next byte to be sent
     uint64_t _next_seqno{0};
 
-  public:
+    // Add in lab3
+    // The segment sent but not had been acked need tracked
+    std::queue<TCPSegment> _track{};
+    // Track receivers' window
+    uint16_t _rwnd{1};
+
+    // Recently absolute sno
+    uint64_t _checkpoint{0};
+
+    // Ackno
+    uint64_t _ackno{0};
+
+    // Timer
+    Timer _timer;
+
+    // Fin send
+    bool _FIN_send{false};
+
+   public:
     //! Initialize a TCPSender
     TCPSender(const size_t capacity = TCPConfig::DEFAULT_CAPACITY,
               const uint16_t retx_timeout = TCPConfig::TIMEOUT_DFLT,
@@ -50,10 +100,12 @@ class TCPSender {
     //! \brief A new acknowledgment was received
     void ack_received(const WrappingInt32 ackno, const uint16_t window_size);
 
-    //! \brief Generate an empty-payload segment (useful for creating empty ACK segments)
+    //! \brief Generate an empty-payload segment (useful for creating empty ACK
+    //! segments)
     void send_empty_segment();
 
-    //! \brief create and send segments to fill as much of the window as possible
+    //! \brief create and send segments to fill as much of the window as
+    //! possible
     void fill_window();
 
     //! \brief Notifies the TCPSender of the passage of time
@@ -63,9 +115,9 @@ class TCPSender {
     //! \name Accessors
     //!@{
 
-    //! \brief How many sequence numbers are occupied by segments sent but not yet acknowledged?
-    //! \note count is in "sequence space," i.e. SYN and FIN each count for one byte
-    //! (see TCPSegment::length_in_sequence_space())
+    //! \brief How many sequence numbers are occupied by segments sent but not
+    //! yet acknowledged? \note count is in "sequence space," i.e. SYN and FIN
+    //! each count for one byte (see TCPSegment::length_in_sequence_space())
     size_t bytes_in_flight() const;
 
     //! \brief Number of consecutive retransmissions that have occurred in a row
